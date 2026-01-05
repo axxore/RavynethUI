@@ -1,7 +1,3 @@
--- ╔══════════════════════════════════════════════════════════════╗
--- ║    RAVYNETH UI V16 - PERFECTION (100% WORKING, NO BUGS)     ║
--- ╚══════════════════════════════════════════════════════════════╝
-
 local RavynethUI = {}
 RavynethUI.__index = RavynethUI
 
