@@ -1,5 +1,5 @@
 -- ╔══════════════════════════════════════════════════════════════╗
--- ║       RAVYNETH UI V14 - ABSOLUTE FINAL (100% FIXED)         ║
+-- ║       RAVYNETH UI V15 - COMPLETE LIBRARY (ALL METHODS)      ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
 local RavynethUI = {}
@@ -78,33 +78,11 @@ local function Create(class, properties)
     return instance
 end
 
--- SHADOW
-local function AddShadow(parent, intensity)
-    intensity = intensity or 0.7
-    
-    local Shadow = Create("ImageLabel", {
-        Name = "Shadow",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1, 30, 1, 30),
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://5554236805",
-        ImageColor3 = Color3.new(0, 0, 0),
-        ImageTransparency = intensity,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(23, 23, 277, 277),
-        ZIndex = parent.ZIndex - 1,
-        Parent = parent
-    })
-    
-    return Shadow
-end
-
 function RavynethUI:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Ravyneth Hub"
     local DefaultKey = config.ToggleKey or Enum.KeyCode.RightShift
-    local LogoUrl = config.LogoUrl or "rbxassetid://YOUR_LOGO_ID"
+    local LogoUrl = config.LogoUrl or "rbxassetid://18518244028"
     
     LoadConfig()
     
@@ -149,7 +127,6 @@ function RavynethUI:CreateWindow(config)
     
     Create("UICorner", {CornerRadius = UDim.new(0, 14), Parent = MainFrame})
     
-    -- GRADIENT (БЕЗ ПОЛОС)
     Create("UIGradient", {
         Color = ColorSequence.new{
             ColorSequenceKeypoint.new(0, Theme.Background),
@@ -160,7 +137,6 @@ function RavynethUI:CreateWindow(config)
         Parent = MainFrame
     })
     
-    -- STROKE (УБИРАЕТ ЖЕСТКИЕ ГРАНИЦЫ)
     Create("UIStroke", {
         Color = Theme.Accent,
         Transparency = 0.85,
@@ -168,7 +144,6 @@ function RavynethUI:CreateWindow(config)
         Parent = MainFrame
     })
     
-    -- SHADOW
     local MainShadow = Create("ImageLabel", {
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -239,7 +214,6 @@ function RavynethUI:CreateWindow(config)
         Parent = Header
     })
     
-    -- HEADER DRAG AREA
     local HeaderDragArea = Create("TextButton", {
         Name = "DragArea",
         Size = UDim2.new(1, -90, 1, 0),
@@ -256,7 +230,6 @@ function RavynethUI:CreateWindow(config)
         end
     end)
     
-    -- LOGO CONTAINER
     local LogoContainer = Create("Frame", {
         Name = "LogoContainer",
         Size = UDim2.new(0, 220, 1, 0),
@@ -266,20 +239,18 @@ function RavynethUI:CreateWindow(config)
         Parent = Header
     })
     
-    -- LOGO IMAGE (РЕАЛЬНОЕ ИЗОБРАЖЕНИЕ!)
     local LogoImage = Create("ImageLabel", {
         Name = "RavynethLogo",
         Size = UDim2.new(0, 36, 0, 36),
         Position = UDim2.new(0, 0, 0.5, -18),
         BackgroundTransparency = 1,
-        Image = "rbxassetid://18518244028",
+        Image = LogoUrl,
         ScaleType = Enum.ScaleType.Fit,
         ImageTransparency = 0,
         ZIndex = 4,
         Parent = LogoContainer
     })
     
-    -- FALLBACK TEXT
     local LogoText = Create("TextLabel", {
         Size = UDim2.new(1, -45, 0, 24),
         Position = UDim2.new(0, 45, 0, 6),
@@ -306,7 +277,6 @@ function RavynethUI:CreateWindow(config)
         Parent = LogoContainer
     })
     
-    -- Buttons Container
     local ButtonContainer = Create("Frame", {
         Size = UDim2.new(0, 76, 0, 32),
         Position = UDim2.new(1, -86, 0, 9),
@@ -374,7 +344,6 @@ function RavynethUI:CreateWindow(config)
         Window:Destroy()
     end)
     
-    -- Sidebar
     local Sidebar = Create("Frame", {
         Name = "Sidebar",
         Size = UDim2.new(0, 130, 1, -60),
@@ -415,7 +384,6 @@ function RavynethUI:CreateWindow(config)
         Parent = SidebarList
     })
     
-    -- Content
     local ContentContainer = Create("Frame", {
         Name = "ContentContainer",
         Size = UDim2.new(1, -155, 1, -60),
@@ -431,41 +399,31 @@ function RavynethUI:CreateWindow(config)
     Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = ContentContainer})
     Create("UIStroke", {Color = Theme.Accent, Transparency = 0.92, Thickness = 1, Parent = ContentContainer})
     
-    -- MINIMIZE/EXPAND (FIXED: DRAG В МИНИМИЗИРОВАННОМ!)
     MinimizeBtn.MouseButton1Click:Connect(function()
         Window.Minimized = not Window.Minimized
         
         if Window.Minimized then
-            -- MINIMIZE
             Tween(MainFrame, {Size = UDim2.new(0, 240, 0, 50)}, 0.25)
-            
             task.wait(0.1)
-            
             Sidebar.Visible = false
             ContentContainer.Visible = false
             ButtonContainer.Visible = false
             HeaderDragArea.Size = UDim2.new(1, -45, 1, 0)
-            
             MinimizeBtn.Text = "+"
             MinimizeBtn.Size = UDim2.new(0, 33, 0, 32)
             MinimizeBtn.Position = UDim2.new(1, -43, 0, 9)
             MinimizeBtn.Parent = Header
-            
         else
-            -- EXPAND
             Sidebar.Visible = true
             ContentContainer.Visible = true
             ButtonContainer.Visible = true
             HeaderDragArea.Size = UDim2.new(1, -90, 1, 0)
-            
             MinimizeBtn.Text = "━"
             MinimizeBtn.Parent = ButtonContainer
-            
             Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.25)
         end
     end)
     
-    -- Window Functions
     function Window:Toggle()
         Window.Visible = not Window.Visible
         MainFrame.Visible = Window.Visible
@@ -484,7 +442,6 @@ function RavynethUI:CreateWindow(config)
         SaveConfig()
     end
     
-    -- FIXED: HOTKEY РАБОТАЕТ!
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         if input.KeyCode == Window.ToggleKey then
@@ -492,7 +449,7 @@ function RavynethUI:CreateWindow(config)
         end
     end)
     
-    -- Create Tab
+    -- CREATE TAB
     function Window:CreateTab(tabName)
         local Tab = {
             Name = tabName,
@@ -587,7 +544,10 @@ function RavynethUI:CreateWindow(config)
             Window.CurrentTab = Tab
         end
         
-        -- ELEMENTS...
+        -- ═══════════════════════════════════════════════════════════
+        --                       ALL UI ELEMENTS
+        -- ═══════════════════════════════════════════════════════════
+        
         function Tab:CreateSection(sectionName)
             local SectionFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 32),
@@ -649,6 +609,51 @@ function RavynethUI:CreateWindow(config)
                 if Label and Label.Parent then Label.Text = newText end
             end
             return LabelObject
+        end
+        
+        function Tab:CreateButton(config)
+            config = config or {}
+            local Name = config.Name or "Button"
+            local Callback = config.Callback or function() end
+            
+            local ButtonFrame = Create("Frame", {
+                Size = UDim2.new(1, 0, 0, 38),
+                BackgroundColor3 = Theme.Element,
+                BackgroundTransparency = 0.5,
+                BorderSizePixel = 0,
+                ZIndex = 4,
+                Parent = TabContent
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = ButtonFrame})
+            Create("UIStroke", {Color = Theme.Accent, Transparency = 0.93, Thickness = 1, Parent = ButtonFrame})
+            
+            local Button = Create("TextButton", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = Name,
+                TextColor3 = Theme.Text,
+                TextSize = 12,
+                Font = Enum.Font.GothamSemibold,
+                AutoButtonColor = false,
+                ZIndex = 5,
+                Parent = ButtonFrame
+            })
+            
+            Button.MouseEnter:Connect(function()
+                Tween(ButtonFrame, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.3}, 0.15)
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                Tween(ButtonFrame, {BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.5}, 0.15)
+            end)
+            
+            Button.MouseButton1Click:Connect(function()
+                Tween(ButtonFrame, {BackgroundColor3 = Theme.AccentLight}, 0.1)
+                task.wait(0.1)
+                Tween(ButtonFrame, {BackgroundColor3 = Theme.Element}, 0.1)
+                Callback()
+            end)
         end
         
         function Tab:CreateToggle(config)
@@ -735,7 +740,273 @@ function RavynethUI:CreateWindow(config)
             return ToggleObject
         end
         
-        -- DROPDOWN (FIXED: ПОКАЗЫВАЕТ ВСЕ ОПЦИИ!)
+        function Tab:CreateSlider(config)
+            config = config or {}
+            local Name = config.Name or "Slider"
+            local Flag = config.Flag or Name
+            local Range = config.Range or {0, 100}
+            local Increment = config.Increment or 1
+            local CurrentValue = SavedConfig[Flag] or config.CurrentValue or Range[1]
+            local Suffix = config.Suffix or ""
+            local Callback = config.Callback or function() end
+            
+            local SliderFrame = Create("Frame", {
+                Size = UDim2.new(1, 0, 0, 52),
+                BackgroundColor3 = Theme.Element,
+                BackgroundTransparency = 0.5,
+                BorderSizePixel = 0,
+                ZIndex = 4,
+                Parent = TabContent
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = SliderFrame})
+            Create("UIStroke", {Color = Theme.Accent, Transparency = 0.93, Thickness = 1, Parent = SliderFrame})
+            
+            local SliderLabel = Create("TextLabel", {
+                Size = UDim2.new(0.6, 0, 0, 18),
+                Position = UDim2.new(0, 12, 0, 8),
+                BackgroundTransparency = 1,
+                Text = Name,
+                TextColor3 = Theme.Text,
+                TextSize = 12,
+                Font = Enum.Font.GothamSemibold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = 5,
+                Parent = SliderFrame
+            })
+            
+            local SliderValue = Create("TextLabel", {
+                Size = UDim2.new(0.4, -12, 0, 18),
+                Position = UDim2.new(0.6, 0, 0, 8),
+                BackgroundTransparency = 1,
+                Text = tostring(CurrentValue) .. Suffix,
+                TextColor3 = Theme.Accent,
+                TextSize = 12,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                ZIndex = 5,
+                Parent = SliderFrame
+            })
+            
+            local SliderBG = Create("Frame", {
+                Size = UDim2.new(1, -24, 0, 6),
+                Position = UDim2.new(0, 12, 1, -18),
+                BackgroundColor3 = Theme.Content,
+                BackgroundTransparency = 0.3,
+                BorderSizePixel = 0,
+                ZIndex = 5,
+                Parent = SliderFrame
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderBG})
+            
+            local SliderFill = Create("Frame", {
+                Size = UDim2.new((CurrentValue - Range[1]) / (Range[2] - Range[1]), 0, 1, 0),
+                BackgroundColor3 = Theme.Accent,
+                BorderSizePixel = 0,
+                ZIndex = 6,
+                Parent = SliderBG
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderFill})
+            
+            local dragging = false
+            
+            local function Update(input)
+                local sizeX = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
+                local value = math.floor((Range[1] + (Range[2] - Range[1]) * sizeX) / Increment + 0.5) * Increment
+                CurrentValue = math.clamp(value, Range[1], Range[2])
+                
+                SliderValue.Text = tostring(CurrentValue) .. Suffix
+                Tween(SliderFill, {Size = UDim2.new((CurrentValue - Range[1]) / (Range[2] - Range[1]), 0, 1, 0)}, 0.1)
+                
+                SavedConfig[Flag] = CurrentValue
+                SaveConfig()
+                Callback(CurrentValue)
+            end
+            
+            SliderBG.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    Update(input)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    Update(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            pcall(Callback, CurrentValue)
+        end
+        
+        function Tab:CreateToggleSlider(config)
+            config = config or {}
+            local Name = config.Name or "Toggle Slider"
+            local ToggleFlag = config.ToggleFlag or Name .. "_Toggle"
+            local SliderFlag = config.SliderFlag or Name .. "_Value"
+            local ToggleValue = SavedConfig[ToggleFlag]
+            if ToggleValue == nil then ToggleValue = config.ToggleValue or false end
+            local Range = config.Range or {0, 100}
+            local Increment = config.Increment or 1
+            local SliderValue = SavedConfig[SliderFlag] or config.SliderValue or Range[1]
+            local Suffix = config.Suffix or ""
+            local ToggleCallback = config.ToggleCallback or function() end
+            local SliderCallback = config.SliderCallback or function() end
+            
+            local TSFrame = Create("Frame", {
+                Size = UDim2.new(1, 0, 0, 66),
+                BackgroundColor3 = Theme.Element,
+                BackgroundTransparency = 0.5,
+                BorderSizePixel = 0,
+                ZIndex = 4,
+                Parent = TabContent
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = TSFrame})
+            Create("UIStroke", {Color = Theme.Accent, Transparency = 0.93, Thickness = 1, Parent = TSFrame})
+            
+            local TSLabel = Create("TextLabel", {
+                Size = UDim2.new(1, -50, 0, 24),
+                Position = UDim2.new(0, 12, 0, 6),
+                BackgroundTransparency = 1,
+                Text = Name,
+                TextColor3 = Theme.Text,
+                TextSize = 12,
+                Font = Enum.Font.GothamSemibold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = 5,
+                Parent = TSFrame
+            })
+            
+            local ToggleButton = Create("TextButton", {
+                Size = UDim2.new(0, 40, 0, 22),
+                Position = UDim2.new(1, -46, 0, 7),
+                BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content,
+                BackgroundTransparency = 0.2,
+                Text = "",
+                AutoButtonColor = false,
+                ZIndex = 5,
+                Parent = TSFrame
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ToggleButton})
+            
+            local ToggleCircle = Create("Frame", {
+                Size = UDim2.new(0, 18, 0, 18),
+                Position = ToggleValue and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9),
+                BackgroundColor3 = Theme.Text,
+                BorderSizePixel = 0,
+                ZIndex = 6,
+                Parent = ToggleButton
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ToggleCircle})
+            
+            local ValueLabel = Create("TextLabel", {
+                Size = UDim2.new(0, 60, 0, 16),
+                Position = UDim2.new(1, -66, 0, 38),
+                BackgroundTransparency = 1,
+                Text = tostring(SliderValue) .. Suffix,
+                TextColor3 = Theme.Accent,
+                TextSize = 11,
+                Font = Enum.Font.GothamBold,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                ZIndex = 5,
+                Parent = TSFrame
+            })
+            
+            local SliderBG = Create("Frame", {
+                Size = UDim2.new(1, -24, 0, 6),
+                Position = UDim2.new(0, 12, 1, -14),
+                BackgroundColor3 = Theme.Content,
+                BackgroundTransparency = 0.3,
+                BorderSizePixel = 0,
+                ZIndex = 5,
+                Parent = TSFrame
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderBG})
+            
+            local SliderFill = Create("Frame", {
+                Size = UDim2.new((SliderValue - Range[1]) / (Range[2] - Range[1]), 0, 1, 0),
+                BackgroundColor3 = Theme.Accent,
+                BorderSizePixel = 0,
+                ZIndex = 6,
+                Parent = SliderBG
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderFill})
+            
+            local TSObject = {Value = SliderValue, Enabled = ToggleValue}
+            
+            local function UpdateToggle()
+                if not ToggleButton or not ToggleButton.Parent then return end
+                Tween(ToggleButton, {BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content}, 0.2)
+                Tween(ToggleCircle, {Position = ToggleValue and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)}, 0.2)
+                SavedConfig[ToggleFlag] = ToggleValue
+                SaveConfig()
+                ToggleCallback(ToggleValue)
+                TSObject.Enabled = ToggleValue
+            end
+            
+            ToggleButton.MouseButton1Click:Connect(function()
+                ToggleValue = not ToggleValue
+                UpdateToggle()
+            end)
+            
+            function TSObject:SetToggle(value)
+                ToggleValue = value
+                UpdateToggle()
+            end
+            
+            local dragging = false
+            
+            local function UpdateSlider(input)
+                local sizeX = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
+                local value = math.floor((Range[1] + (Range[2] - Range[1]) * sizeX) / Increment + 0.5) * Increment
+                SliderValue = math.clamp(value, Range[1], Range[2])
+                
+                ValueLabel.Text = tostring(SliderValue) .. Suffix
+                Tween(SliderFill, {Size = UDim2.new((SliderValue - Range[1]) / (Range[2] - Range[1]), 0, 1, 0)}, 0.1)
+                
+                SavedConfig[SliderFlag] = SliderValue
+                SaveConfig()
+                SliderCallback(SliderValue)
+                TSObject.Value = SliderValue
+            end
+            
+            SliderBG.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    UpdateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    UpdateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            pcall(ToggleCallback, ToggleValue)
+            pcall(SliderCallback, SliderValue)
+            return TSObject
+        end
+        
         function Tab:CreateDropdown(config)
             config = config or {}
             local Name = config.Name or "Dropdown"
@@ -795,7 +1066,6 @@ function RavynethUI:CreateWindow(config)
                 Parent = DropdownButton
             })
             
-            -- FIXED: LIST SHOWS OUTSIDE!
             local DropdownList = Create("ScrollingFrame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 42),
@@ -814,7 +1084,6 @@ function RavynethUI:CreateWindow(config)
             Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = DropdownList})
             Create("UIStroke", {Color = Theme.Accent, Transparency = 0.8, Thickness = 1, Parent = DropdownList})
             
-            -- SHADOW
             Create("ImageLabel", {
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -935,8 +1204,83 @@ function RavynethUI:CreateWindow(config)
             end
         end
         
-        -- ОСТАЛЬНЫЕ ЭЛЕМЕНТЫ ТАКИЕ ЖЕ...
-        -- (ОСТАЛЬНОЙ КОД АНАЛОГИЧЕН)
+        function Tab:CreateKeybind(config)
+            config = config or {}
+            local Name = config.Name or "Keybind"
+            local Flag = config.Flag or Name
+            local CurrentKeybind = SavedConfig[Flag] or config.CurrentKeybind or "None"
+            local Callback = config.Callback or function() end
+            
+            local KeybindFrame = Create("Frame", {
+                Size = UDim2.new(1, 0, 0, 38),
+                BackgroundColor3 = Theme.Element,
+                BackgroundTransparency = 0.5,
+                BorderSizePixel = 0,
+                ZIndex = 4,
+                Parent = TabContent
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = KeybindFrame})
+            Create("UIStroke", {Color = Theme.Accent, Transparency = 0.93, Thickness = 1, Parent = KeybindFrame})
+            
+            local KeybindLabel = Create("TextLabel", {
+                Size = UDim2.new(1, -90, 1, 0),
+                Position = UDim2.new(0, 12, 0, 0),
+                BackgroundTransparency = 1,
+                Text = Name,
+                TextColor3 = Theme.Text,
+                TextSize = 12,
+                Font = Enum.Font.GothamSemibold,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ZIndex = 5,
+                Parent = KeybindFrame
+            })
+            
+            local KeybindButton = Create("TextButton", {
+                Size = UDim2.new(0, 70, 0, 26),
+                Position = UDim2.new(1, -76, 0.5, -13),
+                BackgroundColor3 = Theme.Content,
+                BackgroundTransparency = 0.3,
+                Text = CurrentKeybind,
+                TextColor3 = Theme.Text,
+                TextSize = 11,
+                Font = Enum.Font.GothamBold,
+                AutoButtonColor = false,
+                ZIndex = 5,
+                Parent = KeybindFrame
+            })
+            
+            Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = KeybindButton})
+            
+            local binding = false
+            
+            KeybindButton.MouseButton1Click:Connect(function()
+                binding = true
+                KeybindButton.Text = "..."
+                
+                local connection
+                connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                    if binding then
+                        if input.UserInputType == Enum.UserInputType.Keyboard then
+                            local key = input.KeyCode.Name
+                            CurrentKeybind = key
+                            KeybindButton.Text = key
+                            SavedConfig[Flag] = key
+                            SaveConfig()
+                            binding = false
+                            connection:Disconnect()
+                        end
+                    end
+                end)
+            end)
+            
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if gameProcessed or binding then return end
+                if input.KeyCode.Name == CurrentKeybind and CurrentKeybind ~= "None" then
+                    Callback()
+                end
+            end)
+        end
         
         return Tab
     end
