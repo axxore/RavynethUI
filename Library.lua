@@ -1,5 +1,5 @@
 -- ╔══════════════════════════════════════════════════════════════╗
--- ║       RAVYNETH UI V10 - PRODUCTION (ALL BUGS FIXED)          ║
+-- ║         RAVYNETH UI V11 - FINAL PRODUCTION LIBRARY          ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
 local RavynethUI = {}
@@ -35,23 +35,27 @@ local function LoadConfig()
     end
 end
 
--- THEME (BLACK-PURPLE WITH TRANSPARENCY)
+-- THEME (BLACK-PURPLE WITH GRADIENT)
 local Theme = {
-    Background = Color3.fromRGB(15, 12, 20),      -- Deep black-purple
-    Sidebar = Color3.fromRGB(20, 16, 26),         -- Slightly lighter
-    Content = Color3.fromRGB(18, 14, 23),         -- Content area
-    Element = Color3.fromRGB(28, 23, 35),         -- Elements
+    Background = Color3.fromRGB(15, 12, 20),
+    BackgroundGradient = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 12, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 18, 35))
+    },
+    Sidebar = Color3.fromRGB(20, 16, 26),
+    Content = Color3.fromRGB(18, 14, 23),
+    Element = Color3.fromRGB(28, 23, 35),
     
-    Accent = Color3.fromRGB(138, 43, 226),        -- Purple accent
-    AccentDark = Color3.fromRGB(108, 33, 196),    -- Darker purple
+    Accent = Color3.fromRGB(138, 43, 226),
+    AccentDark = Color3.fromRGB(108, 33, 196),
     
-    Text = Color3.fromRGB(255, 255, 255),         -- White text
-    TextDim = Color3.fromRGB(180, 180, 200),      -- Dimmed text
+    Text = Color3.fromRGB(255, 255, 255),
+    TextDim = Color3.fromRGB(180, 180, 200),
     
-    Success = Color3.fromRGB(138, 43, 226),       -- Purple for success
-    Warning = Color3.fromRGB(168, 73, 255),       -- Light purple
-    Error = Color3.fromRGB(148, 33, 216),         -- Purple-red
-    Info = Color3.fromRGB(128, 53, 236)           -- Info purple
+    Success = Color3.fromRGB(138, 43, 226),
+    Warning = Color3.fromRGB(168, 73, 255),
+    Error = Color3.fromRGB(148, 33, 216),
+    Info = Color3.fromRGB(128, 53, 236)
 }
 
 local function Tween(object, properties, duration)
@@ -89,7 +93,8 @@ function RavynethUI:CreateWindow(config)
         CurrentTab = nil,
         Visible = true,
         Minimized = false,
-        ToggleKey = SavedConfig.UIToggleKey and Enum.KeyCode[SavedConfig.UIToggleKey] or DefaultKey
+        ToggleKey = SavedConfig.UIToggleKey and Enum.KeyCode[SavedConfig.UIToggleKey] or DefaultKey,
+        ShowNotifications = true
     }
     
     local ScreenGui = Create("ScreenGui", {
@@ -99,19 +104,26 @@ function RavynethUI:CreateWindow(config)
         ResetOnSpawn = false
     })
     
-    -- Main Frame (680x480) - 75% OPACITY
+    -- Main Frame (680x480) - 80% OPACITY
     local MainFrame = Create("Frame", {
         Name = "MainFrame",
         Size = UDim2.new(0, 680, 0, 480),
         Position = UDim2.new(0.5, -340, 0.5, -240),
         BackgroundColor3 = Theme.Background,
-        BackgroundTransparency = 0.25,  -- 75% OPACITY
+        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Active = true,
         Parent = ScreenGui
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = MainFrame})
+    
+    -- GRADIENT (КРАСИВЫЙ ГРАДИЕНТ)
+    local Gradient = Create("UIGradient", {
+        Color = Theme.BackgroundGradient,
+        Rotation = 45,
+        Parent = MainFrame
+    })
     
     -- Shadow
     local Shadow = Create("ImageLabel", {
@@ -128,32 +140,33 @@ function RavynethUI:CreateWindow(config)
         Parent = MainFrame
     })
     
-    -- DRAG SYSTEM (WORKS EVEN WHEN MINIMIZED)
+    -- DRAG SYSTEM (WORKS EVERYWHERE)
     local dragging = false
     local dragStart = nil
     local startPos = nil
     
-    local function MakeDraggable(frame)
-        frame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                dragStart = input.Position
-                startPos = MainFrame.Position
-            end
-        end)
-        
-        frame.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-                local delta = input.Position - dragStart
-                MainFrame.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            end
-        end)
+    local function StartDrag(input)
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
     end
+    
+    local function UpdateDrag(input)
+        if not dragging then return end
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            UpdateDrag(input)
+        end
+    end)
     
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -161,7 +174,7 @@ function RavynethUI:CreateWindow(config)
         end
     end)
     
-    -- Header (50px) - TRANSPARENT
+    -- Header (50px)
     local Header = Create("Frame", {
         Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Sidebar,
@@ -181,21 +194,29 @@ function RavynethUI:CreateWindow(config)
         Parent = Header
     })
     
-    MakeDraggable(Header)
+    Header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            StartDrag(input)
+        end
+    end)
     
-    -- LOGO CONTAINER (WITH REAL IMAGE)
+    -- LOGO CONTAINER
     local LogoContainer = Create("Frame", {
         Name = "LogoContainer",
-        Size = UDim2.new(0, 200, 1, 0),
+        Size = UDim2.new(0, 220, 1, 0),
         Position = UDim2.new(0, 15, 0, 0),
         BackgroundTransparency = 1,
         Active = true,
         Parent = Header
     })
     
-    MakeDraggable(LogoContainer)
+    LogoContainer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            StartDrag(input)
+        end
+    end)
     
-    -- REAL LOGO IMAGE
+    -- LOGO IMAGE (РЕАЛЬНОЕ ЛОГО СУКА!)
     local LogoImage = Create("ImageLabel", {
         Name = "LogoImage",
         Size = UDim2.new(0, 36, 0, 36),
@@ -203,8 +224,17 @@ function RavynethUI:CreateWindow(config)
         BackgroundTransparency = 1,
         Image = LogoUrl,
         ScaleType = Enum.ScaleType.Fit,
+        ImageTransparency = 0,
         Parent = LogoContainer
     })
+    
+    -- Fallback если лого не загрузится
+    task.spawn(function()
+        task.wait(2)
+        if LogoImage.Image == "" or not LogoImage.IsLoaded then
+            warn("Logo failed to load, using text fallback")
+        end
+    end)
     
     local LogoText = Create("TextLabel", {
         Size = UDim2.new(1, -45, 0, 24),
@@ -230,9 +260,7 @@ function RavynethUI:CreateWindow(config)
         Parent = LogoContainer
     })
     
-    -- NO SEARCH BAR (REMOVED)
-    
-    -- Buttons
+    -- Buttons Container
     local ButtonContainer = Create("Frame", {
         Size = UDim2.new(0, 70, 0, 32),
         Position = UDim2.new(1, -80, 0, 9),
@@ -261,6 +289,14 @@ function RavynethUI:CreateWindow(config)
     
     Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = MinimizeBtn})
     
+    MinimizeBtn.MouseEnter:Connect(function()
+        Tween(MinimizeBtn, {BackgroundColor3 = Theme.Accent}, 0.15)
+    end)
+    
+    MinimizeBtn.MouseLeave:Connect(function()
+        Tween(MinimizeBtn, {BackgroundColor3 = Theme.Element}, 0.15)
+    end)
+    
     local CloseBtn = Create("TextButton", {
         Size = UDim2.new(0, 32, 0, 32),
         BackgroundColor3 = Theme.Element,
@@ -275,94 +311,21 @@ function RavynethUI:CreateWindow(config)
     
     Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = CloseBtn})
     
+    CloseBtn.MouseEnter:Connect(function()
+        Tween(CloseBtn, {BackgroundColor3 = Color3.fromRGB(200, 50, 50)}, 0.15)
+    end)
+    
+    CloseBtn.MouseLeave:Connect(function()
+        Tween(CloseBtn, {BackgroundColor3 = Theme.Element}, 0.15)
+    end)
+    
     CloseBtn.MouseButton1Click:Connect(function()
         Window:Destroy()
     end)
     
-    -- MINIMIZE/EXPAND LOGIC (FIXED)
-    local ExpandClickFrame = nil
-    
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        Window.Minimized = not Window.Minimized
-        
-        if Window.Minimized then
-            -- MINIMIZE
-            Tween(MainFrame, {Size = UDim2.new(0, 220, 0, 50)}, 0.3)
-            
-            task.wait(0.1)
-            
-            -- Hide everything except header
-            for _, child in pairs(MainFrame:GetChildren()) do
-                if child.Name ~= "Header" and child.Name ~= "Shadow" and not child:IsA("UICorner") then
-                    child.Visible = false
-                end
-            end
-            
-            ButtonContainer.Visible = false
-            MinimizeBtn.Text = "+"
-            
-            -- Make logo clickable to expand
-            if ExpandClickFrame then ExpandClickFrame:Destroy() end
-            
-            ExpandClickFrame = Create("TextButton", {
-                Name = "ExpandClick",
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = "",
-                ZIndex = 10,
-                Parent = LogoContainer
-            })
-            
-            ExpandClickFrame.MouseButton1Click:Connect(function()
-                Window.Minimized = false
-                
-                -- Show everything
-                ButtonContainer.Visible = true
-                MinimizeBtn.Text = "━"
-                
-                for _, child in pairs(MainFrame:GetChildren()) do
-                    if child.Name ~= "Shadow" then
-                        child.Visible = true
-                    end
-                end
-                
-                Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
-                
-                if ExpandClickFrame then
-                    ExpandClickFrame:Destroy()
-                    ExpandClickFrame = nil
-                end
-            end)
-            
-            ExpandClickFrame.MouseEnter:Connect(function()
-                Tween(LogoText, {TextSize = 20}, 0.15)
-            end)
-            
-            ExpandClickFrame.MouseLeave:Connect(function()
-                Tween(LogoText, {TextSize = 18}, 0.15)
-            end)
-        else
-            -- EXPAND (if clicked minimize again)
-            ButtonContainer.Visible = true
-            MinimizeBtn.Text = "━"
-            
-            for _, child in pairs(MainFrame:GetChildren()) do
-                if child.Name ~= "Shadow" then
-                    child.Visible = true
-                end
-            end
-            
-            Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
-            
-            if ExpandClickFrame then
-                ExpandClickFrame:Destroy()
-                ExpandClickFrame = nil
-            end
-        end
-    end)
-    
     -- Sidebar
     local Sidebar = Create("Frame", {
+        Name = "Sidebar",
         Size = UDim2.new(0, 130, 1, -60),
         Position = UDim2.new(0, 10, 0, 55),
         BackgroundColor3 = Theme.Sidebar,
@@ -400,6 +363,7 @@ function RavynethUI:CreateWindow(config)
     
     -- Content
     local ContentContainer = Create("Frame", {
+        Name = "ContentContainer",
         Size = UDim2.new(1, -155, 1, -60),
         Position = UDim2.new(0, 145, 0, 55),
         BackgroundColor3 = Theme.Content,
@@ -409,6 +373,96 @@ function RavynethUI:CreateWindow(config)
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = ContentContainer})
+    
+    -- MINIMIZE/EXPAND SYSTEM (FIXED ПОЛНОСТЬЮ)
+    local ExpandClickArea = nil
+    
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        Window.Minimized = not Window.Minimized
+        
+        if Window.Minimized then
+            -- MINIMIZE
+            Tween(MainFrame, {Size = UDim2.new(0, 240, 0, 50)}, 0.3)
+            
+            task.wait(0.1)
+            
+            -- Hide everything
+            Sidebar.Visible = false
+            ContentContainer.Visible = false
+            ButtonContainer.Visible = false
+            
+            MinimizeBtn.Text = "+"
+            MinimizeBtn.Size = UDim2.new(0, 32, 0, 32)
+            MinimizeBtn.Position = UDim2.new(1, -38, 0, 9)
+            MinimizeBtn.Parent = Header
+            
+            -- Create expand click area
+            if ExpandClickArea then ExpandClickArea:Destroy() end
+            
+            ExpandClickArea = Create("TextButton", {
+                Name = "ExpandArea",
+                Size = UDim2.new(1, -45, 1, 0),
+                Position = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                ZIndex = 10,
+                Parent = LogoContainer
+            })
+            
+            ExpandClickArea.MouseButton1Click:Connect(function()
+                if not Window.Minimized then return end
+                
+                Window.Minimized = false
+                
+                -- Show everything
+                Sidebar.Visible = true
+                ContentContainer.Visible = true
+                ButtonContainer.Visible = true
+                
+                MinimizeBtn.Text = "━"
+                MinimizeBtn.Parent = ButtonContainer
+                
+                Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
+                
+                if ExpandClickArea then
+                    ExpandClickArea:Destroy()
+                    ExpandClickArea = nil
+                end
+            end)
+            
+            ExpandClickArea.MouseEnter:Connect(function()
+                Tween(LogoText, {TextSize = 20}, 0.15)
+                Tween(LogoImage, {Size = UDim2.new(0, 40, 0, 40), Position = UDim2.new(0, -2, 0.5, -20)}, 0.15)
+            end)
+            
+            ExpandClickArea.MouseLeave:Connect(function()
+                Tween(LogoText, {TextSize = 18}, 0.15)
+                Tween(LogoImage, {Size = UDim2.new(0, 36, 0, 36), Position = UDim2.new(0, 0, 0.5, -18)}, 0.15)
+            end)
+            
+            -- Make minimized frame draggable
+            ExpandClickArea.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    StartDrag(input)
+                end
+            end)
+            
+        else
+            -- EXPAND (from minimize button)
+            Sidebar.Visible = true
+            ContentContainer.Visible = true
+            ButtonContainer.Visible = true
+            
+            MinimizeBtn.Text = "━"
+            
+            Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
+            
+            if ExpandClickArea then
+                ExpandClickArea:Destroy()
+                ExpandClickArea = nil
+            end
+        end
+    end)
     
     -- Window Functions
     function Window:Toggle()
@@ -487,18 +541,28 @@ function RavynethUI:CreateWindow(config)
         
         Tab.Container = TabContent
         
+        TabButton.MouseEnter:Connect(function()
+            if Window.CurrentTab ~= Tab then
+                Tween(TabButton, {BackgroundTransparency = 0}, 0.15)
+            end
+        end)
+        
+        TabButton.MouseLeave:Connect(function()
+            if Window.CurrentTab ~= Tab then
+                Tween(TabButton, {BackgroundTransparency = 0.2}, 0.15)
+            end
+        end)
+        
         TabButton.MouseButton1Click:Connect(function()
             for _, tab in pairs(Window.Tabs) do
                 tab.Container.Visible = false
-                tab.Button.BackgroundColor3 = Theme.Element
-                tab.Button.BackgroundTransparency = 0.2
-                tab.Label.TextColor3 = Theme.TextDim
+                Tween(tab.Button, {BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.2}, 0.15)
+                Tween(tab.Label, {TextColor3 = Theme.TextDim}, 0.15)
             end
             
             TabContent.Visible = true
-            TabButton.BackgroundColor3 = Theme.Accent
-            TabButton.BackgroundTransparency = 0
-            TabLabel.TextColor3 = Theme.Text
+            Tween(TabButton, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0}, 0.15)
+            Tween(TabLabel, {TextColor3 = Theme.Text}, 0.15)
             Window.CurrentTab = Tab
         end)
         
@@ -543,6 +607,8 @@ function RavynethUI:CreateWindow(config)
                 BorderSizePixel = 0,
                 Parent = SectionFrame
             })
+            
+            Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = Divider})
         end
         
         -- LABEL
@@ -630,7 +696,7 @@ function RavynethUI:CreateWindow(config)
             
             local function Update()
                 if not ToggleButton or not ToggleButton.Parent then return end
-                ToggleButton.BackgroundColor3 = CurrentValue and Theme.Accent or Theme.Content
+                Tween(ToggleButton, {BackgroundColor3 = CurrentValue and Theme.Accent or Theme.Content}, 0.2)
                 Tween(ToggleCircle, {Position = CurrentValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
                 SavedConfig[Flag] = CurrentValue
                 SaveConfig()
@@ -771,6 +837,9 @@ function RavynethUI:CreateWindow(config)
                     Dragging = false
                 end
             end)
+            
+            -- APPLY INITIAL VALUE
+            pcall(Callback, CurrentValue)
         end
         
         -- TOGGLE + SLIDER COMBO
@@ -883,7 +952,7 @@ function RavynethUI:CreateWindow(config)
             function ToggleSliderObject:SetToggle(value)
                 ToggleValue = value
                 ToggleSliderObject.ToggleValue = value
-                ToggleButton.BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content
+                Tween(ToggleButton, {BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content}, 0.2)
                 Tween(ToggleCircle, {Position = ToggleValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
                 SavedConfig[ToggleFlag] = ToggleValue
                 SaveConfig()
@@ -893,7 +962,7 @@ function RavynethUI:CreateWindow(config)
             ToggleButton.MouseButton1Click:Connect(function()
                 ToggleValue = not ToggleValue
                 ToggleSliderObject.ToggleValue = ToggleValue
-                ToggleButton.BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content
+                Tween(ToggleButton, {BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content}, 0.2)
                 Tween(ToggleCircle, {Position = ToggleValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
                 SavedConfig[ToggleFlag] = ToggleValue
                 SaveConfig()
@@ -941,6 +1010,10 @@ function RavynethUI:CreateWindow(config)
                     Dragging = false
                 end
             end)
+            
+            -- APPLY INITIAL VALUES
+            pcall(ToggleCallback, ToggleValue)
+            pcall(SliderCallback, SliderValue)
             
             return ToggleSliderObject
         end
@@ -1068,33 +1141,41 @@ function RavynethUI:CreateWindow(config)
                     Parent = OptionButton
                 })
                 
+                OptionButton.MouseEnter:Connect(function()
+                    if not table.find(CurrentOption, option) then
+                        Tween(OptionButton, {BackgroundTransparency = 0.1}, 0.1)
+                    end
+                end)
+                
+                OptionButton.MouseLeave:Connect(function()
+                    if not table.find(CurrentOption, option) then
+                        Tween(OptionButton, {BackgroundTransparency = 0.3}, 0.1)
+                    end
+                end)
+                
                 OptionButton.MouseButton1Click:Connect(function()
                     if MultipleOptions then
                         local found = table.find(CurrentOption, option)
                         if found then
                             table.remove(CurrentOption, found)
-                            OptionButton.BackgroundColor3 = Theme.Element
-                            OptionButton.BackgroundTransparency = 0.3
-                            OptionLabel.TextColor3 = Theme.TextDim
+                            Tween(OptionButton, {BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.3}, 0.15)
+                            Tween(OptionLabel, {TextColor3 = Theme.TextDim}, 0.15)
                         else
                             table.insert(CurrentOption, option)
-                            OptionButton.BackgroundColor3 = Theme.Accent
-                            OptionButton.BackgroundTransparency = 0.2
-                            OptionLabel.TextColor3 = Theme.Text
+                            Tween(OptionButton, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.2}, 0.15)
+                            Tween(OptionLabel, {TextColor3 = Theme.Text}, 0.15)
                         end
                     else
                         CurrentOption = {option}
                         for _, btn in ipairs(DropdownList:GetChildren()) do
                             if btn:IsA("TextButton") then
-                                btn.BackgroundColor3 = Theme.Element
-                                btn.BackgroundTransparency = 0.3
+                                Tween(btn, {BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.3}, 0.15)
                                 local lbl = btn:FindFirstChildOfClass("TextLabel")
-                                if lbl then lbl.TextColor3 = Theme.TextDim end
+                                if lbl then Tween(lbl, {TextColor3 = Theme.TextDim}, 0.15) end
                             end
                         end
-                        OptionButton.BackgroundColor3 = Theme.Accent
-                        OptionButton.BackgroundTransparency = 0.2
-                        OptionLabel.TextColor3 = Theme.Text
+                        Tween(OptionButton, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.2}, 0.15)
+                        Tween(OptionLabel, {TextColor3 = Theme.Text}, 0.15)
                     end
                     
                     SavedConfig[Flag] = CurrentOption
@@ -1157,6 +1238,18 @@ function RavynethUI:CreateWindow(config)
             
             local Binding = false
             local Connection = nil
+            
+            KeybindButton.MouseEnter:Connect(function()
+                if not Binding then
+                    Tween(KeybindButton, {BackgroundColor3 = Theme.Element}, 0.15)
+                end
+            end)
+            
+            KeybindButton.MouseLeave:Connect(function()
+                if not Binding then
+                    Tween(KeybindButton, {BackgroundColor3 = Theme.Content}, 0.15)
+                end
+            end)
             
             KeybindButton.MouseButton1Click:Connect(function()
                 if Binding then return end
@@ -1225,6 +1318,14 @@ function RavynethUI:CreateWindow(config)
                 Parent = ButtonFrame
             })
             
+            Button.MouseEnter:Connect(function()
+                Tween(ButtonFrame, {BackgroundTransparency = 0}, 0.15)
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                Tween(ButtonFrame, {BackgroundTransparency = 0.2}, 0.15)
+            end)
+            
             Button.MouseButton1Click:Connect(function()
                 Callback()
             end)
@@ -1233,8 +1334,10 @@ function RavynethUI:CreateWindow(config)
         return Tab
     end
     
-    -- NOTIFICATION (BLACK-PURPLE WITH TRANSPARENCY)
+    -- NOTIFICATION SYSTEM (FIXED: УЧИТЫВАЕТ ShowNotifications)
     function Window:Notify(config)
+        if not Window.ShowNotifications then return end
+        
         config = config or {}
         local Title = config.Title or "Notification"
         local Content = config.Content or ""
@@ -1270,13 +1373,20 @@ function RavynethUI:CreateWindow(config)
         local Notification = Create("Frame", {
             Size = UDim2.new(1, 0, 0, 0),
             BackgroundColor3 = Theme.Background,
-            BackgroundTransparency = 0.25,  -- 75% OPACITY
+            BackgroundTransparency = 0.2,
             BorderSizePixel = 0,
             ZIndex = 101,
             Parent = NotifContainer
         })
         
         Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = Notification})
+        
+        -- GRADIENT
+        Create("UIGradient", {
+            Color = Theme.BackgroundGradient,
+            Rotation = 45,
+            Parent = Notification
+        })
         
         local AccentLine = Create("Frame", {
             Size = UDim2.new(0, 3, 1, 0),
