@@ -1,5 +1,5 @@
 -- ╔══════════════════════════════════════════════════════════════╗
--- ║         RAVYNETH UI V7 - FINAL (ALL BUGS FIXED)              ║
+-- ║         RAVYNETH UI V9 - PRODUCTION (FULLY FIXED)            ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
 local RavynethUI = {}
@@ -14,6 +14,7 @@ local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 
+-- CONFIG SYSTEM
 local ConfigFolder = "RavynethHub"
 local ConfigFile = "Config.json"
 local SavedConfig = {}
@@ -34,38 +35,30 @@ local function LoadConfig()
     end
 end
 
--- LIGHTER THEME WITH TRANSPARENCY
+-- CLEAN THEME (NO OUTLINES, NO GLOWS)
 local Theme = {
-    Background = Color3.fromRGB(25, 20, 35),
-    BackgroundGradient = Color3.fromRGB(35, 28, 45),
-    Sidebar = Color3.fromRGB(28, 22, 38),
-    Content = Color3.fromRGB(30, 24, 40),
-    Element = Color3.fromRGB(35, 28, 45),
-    ElementHover = Color3.fromRGB(45, 35, 55),
+    Background = Color3.fromRGB(18, 18, 22),
+    Sidebar = Color3.fromRGB(22, 22, 28),
+    Content = Color3.fromRGB(20, 20, 26),
+    Element = Color3.fromRGB(28, 28, 35),
     
     Accent = Color3.fromRGB(138, 43, 226),
-    AccentLight = Color3.fromRGB(168, 73, 255),
-    AccentDark = Color3.fromRGB(108, 13, 196),
+    AccentDark = Color3.fromRGB(108, 33, 196),
     
     Text = Color3.fromRGB(255, 255, 255),
-    TextDim = Color3.fromRGB(200, 200, 220),
-    TextDarker = Color3.fromRGB(140, 140, 160),
+    TextDim = Color3.fromRGB(180, 180, 200),
     
-    Success = Color3.fromRGB(138, 43, 226),
-    Warning = Color3.fromRGB(168, 73, 255),
-    Error = Color3.fromRGB(148, 33, 216),
-    Info = Color3.fromRGB(128, 53, 236)
+    Success = Color3.fromRGB(76, 175, 80),
+    Warning = Color3.fromRGB(255, 152, 0),
+    Error = Color3.fromRGB(244, 67, 54),
+    Info = Color3.fromRGB(33, 150, 243)
 }
 
-local function Tween(object, properties, duration, easingStyle, easingDirection)
+local function Tween(object, properties, duration)
     if not object or not object.Parent then return end
-    duration = duration or 0.2
-    easingStyle = easingStyle or Enum.EasingStyle.Quart
-    easingDirection = easingDirection or Enum.EasingDirection.Out
-    
     local tween = TweenService:Create(
         object,
-        TweenInfo.new(duration, easingStyle, easingDirection),
+        TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
         properties
     )
     tween:Play()
@@ -76,27 +69,11 @@ local function Create(class, properties)
     local instance = Instance.new(class)
     for property, value in pairs(properties) do
         if property ~= "Parent" then
-            pcall(function()
-                instance[property] = value
-            end)
+            pcall(function() instance[property] = value end)
         end
     end
-    if properties.Parent then
-        instance.Parent = properties.Parent
-    end
+    if properties.Parent then instance.Parent = properties.Parent end
     return instance
-end
-
-local function AddGradient(frame, color1, color2, rotation)
-    local gradient = Create("UIGradient", {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, color1),
-            ColorSequenceKeypoint.new(1, color2)
-        }),
-        Rotation = rotation or 90,
-        Parent = frame
-    })
-    return gradient
 end
 
 function RavynethUI:CreateWindow(config)
@@ -111,72 +88,60 @@ function RavynethUI:CreateWindow(config)
         CurrentTab = nil,
         Visible = true,
         Minimized = false,
-        ToggleKey = SavedConfig.UIToggleKey and Enum.KeyCode[SavedConfig.UIToggleKey] or DefaultKey,
-        SearchQuery = ""
+        ToggleKey = SavedConfig.UIToggleKey and Enum.KeyCode[SavedConfig.UIToggleKey] or DefaultKey
     }
     
     local ScreenGui = Create("ScreenGui", {
         Name = "RavynethUI_" .. HttpService:GenerateGUID(false),
         Parent = CoreGui,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        ResetOnSpawn = false,
-        IgnoreGuiInset = true
+        ResetOnSpawn = false
     })
     
-    -- Main Frame (680x480, SEMI-TRANSPARENT)
+    -- Main Frame (680x480)
     local MainFrame = Create("Frame", {
         Name = "MainFrame",
         Size = UDim2.new(0, 680, 0, 480),
         Position = UDim2.new(0.5, -340, 0.5, -240),
         BackgroundColor3 = Theme.Background,
-        BackgroundTransparency = 0.2,
+        BackgroundTransparency = 0.05,
         BorderSizePixel = 0,
-        ClipsDescendants = false,
         Active = true,
-        ZIndex = 1,
         Parent = ScreenGui
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = MainFrame})
-    AddGradient(MainFrame, Theme.Background, Theme.BackgroundGradient, 135)
     
-    -- Subtle shadow only (no glow)
+    -- Shadow
     local Shadow = Create("ImageLabel", {
-        Name = "Shadow",
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1, 60, 1, 60),
+        Size = UDim2.new(1, 40, 1, 40),
         BackgroundTransparency = 1,
         Image = "rbxassetid://5554236805",
         ImageColor3 = Color3.new(0, 0, 0),
-        ImageTransparency = 0.5,
+        ImageTransparency = 0.6,
         ScaleType = Enum.ScaleType.Slice,
         SliceCenter = Rect.new(23, 23, 277, 277),
         ZIndex = 0,
         Parent = MainFrame
     })
     
-    -- FIXED DRAG SYSTEM
+    -- DRAG SYSTEM (FIXED)
     local dragging = false
     local dragStart = nil
     local startPos = nil
     
     MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
             startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
         end
     end)
     
     MainFrame.InputChanged:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(
                 startPos.X.Scale,
@@ -187,19 +152,22 @@ function RavynethUI:CreateWindow(config)
         end
     end)
     
-    -- Header (50px, TRANSPARENT)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    -- Header (50px)
     local Header = Create("Frame", {
-        Name = "Header",
         Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Sidebar,
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        ZIndex = 2,
         Parent = MainFrame
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = Header})
-    AddGradient(Header, Theme.Sidebar, Theme.Background, 90)
     
     Create("Frame", {
         Size = UDim2.new(1, 0, 0, 12),
@@ -207,87 +175,57 @@ function RavynethUI:CreateWindow(config)
         BackgroundColor3 = Theme.Sidebar,
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        ZIndex = 2,
         Parent = Header
     })
-    AddGradient(Header:GetChildren()[#Header:GetChildren()], Theme.Sidebar, Theme.Background, 90)
     
-    -- PREMIUM LOGO WITH EFFECTS
+    -- LOGO (IMAGE + TEXT)
     local LogoContainer = Create("Frame", {
-        Name = "LogoContainer",
-        Size = UDim2.new(0, 200, 0, 40),
-        Position = UDim2.new(0, 12, 0, 5),
+        Size = UDim2.new(0, 180, 1, 0),
+        Position = UDim2.new(0, 15, 0, 0),
         BackgroundTransparency = 1,
-        ZIndex = 3,
-        Active = true,
         Parent = Header
     })
     
-    -- Glow effect behind logo
-    local LogoGlow = Create("ImageLabel", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1, 60, 1, 60),
+    -- LOGO IMAGE (REAL IMAGE)
+    local LogoImage = Create("ImageLabel", {
+        Size = UDim2.new(0, 32, 0, 32),
+        Position = UDim2.new(0, 0, 0.5, -16),
         BackgroundTransparency = 1,
-        Image = "rbxassetid://5554236805",
-        ImageColor3 = Theme.Accent,
-        ImageTransparency = 0.7,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(23, 23, 277, 277),
-        ZIndex = 2,
+        Image = "rbxassetid://18793128361", -- RAVYNETH LOGO
+        ScaleType = Enum.ScaleType.Fit,
         Parent = LogoContainer
     })
     
     local LogoText = Create("TextLabel", {
-        Name = "LogoText",
-        Size = UDim2.new(1, 0, 0, 28),
-        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, -40, 0, 24),
+        Position = UDim2.new(0, 40, 0, 6),
         BackgroundTransparency = 1,
         Text = "RAVYNETH",
         TextColor3 = Theme.Text,
-        TextSize = 22,
+        TextSize = 18,
         Font = Enum.Font.GothamBold,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextStrokeTransparency = 0.8,
-        TextStrokeColor3 = Theme.Accent,
-        ZIndex = 3,
         Parent = LogoContainer
     })
-    AddGradient(LogoText, Theme.AccentLight, Theme.Accent, 90)
     
     local LogoSubtext = Create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 10),
-        Position = UDim2.new(0, 0, 0, 28),
+        Size = UDim2.new(1, -40, 0, 12),
+        Position = UDim2.new(0, 40, 0, 28),
         BackgroundTransparency = 1,
         Text = "ADVANCED SCRIPT HUB",
         TextColor3 = Theme.TextDim,
         TextSize = 8,
         Font = Enum.Font.Gotham,
         TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 3,
         Parent = LogoContainer
     })
     
-    -- Animate logo glow
-    task.spawn(function()
-        while LogoGlow and LogoGlow.Parent do
-            Tween(LogoGlow, {ImageTransparency = 0.5}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-            task.wait(1.5)
-            if not LogoGlow or not LogoGlow.Parent then break end
-            Tween(LogoGlow, {ImageTransparency = 0.8}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-            task.wait(1.5)
-        end
-    end)
-    
     -- Search Bar
     local SearchContainer = Create("Frame", {
-        Name = "SearchContainer",
         Size = UDim2.new(0, 220, 0, 32),
-        Position = UDim2.new(0, 220, 0, 9),
+        Position = UDim2.new(0, 210, 0, 9),
         BackgroundColor3 = Theme.Element,
-        BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        ZIndex = 3,
         Parent = Header
     })
     
@@ -301,109 +239,60 @@ function RavynethUI:CreateWindow(config)
         ImageRectOffset = Vector2.new(964, 324),
         ImageRectSize = Vector2.new(36, 36),
         ImageColor3 = Theme.Accent,
-        ZIndex = 4,
         Parent = SearchContainer
     })
     
     local SearchBox = Create("TextBox", {
-        Name = "SearchBox",
         Size = UDim2.new(1, -40, 1, 0),
         Position = UDim2.new(0, 32, 0, 0),
         BackgroundTransparency = 1,
         Text = "",
         PlaceholderText = "Search...",
-        PlaceholderColor3 = Theme.TextDarker,
+        PlaceholderColor3 = Theme.TextDim,
         TextColor3 = Theme.Text,
         TextSize = 12,
         Font = Enum.Font.Gotham,
         TextXAlignment = Enum.TextXAlignment.Left,
         ClearTextOnFocus = false,
-        ZIndex = 4,
         Parent = SearchContainer
     })
     
-    SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-        local query = SearchBox.Text:lower()
-        Window.SearchQuery = query
-        
-        if Window.CurrentTab and Window.CurrentTab.Container then
-            for _, element in pairs(Window.CurrentTab.Container:GetChildren()) do
-                if element:IsA("Frame") and element.Name ~= "UIListLayout" and element.Name ~= "UIPadding" then
-                    local textLabel = element:FindFirstChildOfClass("TextLabel")
-                    if textLabel then
-                        local text = textLabel.Text:lower()
-                        element.Visible = query == "" or text:find(query, 1, true) ~= nil
-                    end
-                end
-            end
-        end
-    end)
-    
-    SearchContainer.MouseEnter:Connect(function()
-        Tween(SearchContainer, {BackgroundTransparency = 0.1}, 0.2)
-    end)
-    
-    SearchContainer.MouseLeave:Connect(function()
-        Tween(SearchContainer, {BackgroundTransparency = 0.3}, 0.2)
-    end)
-    
     -- Buttons
     local ButtonContainer = Create("Frame", {
-        Name = "ButtonContainer",
         Size = UDim2.new(0, 70, 0, 32),
         Position = UDim2.new(1, -80, 0, 9),
         BackgroundTransparency = 1,
-        ZIndex = 3,
         Parent = Header
     })
     
     Create("UIListLayout", {
         FillDirection = Enum.FillDirection.Horizontal,
         HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        SortOrder = Enum.SortOrder.LayoutOrder,
         Padding = UDim.new(0, 6),
         Parent = ButtonContainer
     })
     
     local MinimizeBtn = Create("TextButton", {
-        Name = "MinimizeBtn",
         Size = UDim2.new(0, 32, 0, 32),
         BackgroundColor3 = Theme.Element,
-        BackgroundTransparency = 0.3,
         Text = "━",
         TextColor3 = Theme.Text,
         TextSize = 14,
         Font = Enum.Font.GothamBold,
         AutoButtonColor = false,
-        ZIndex = 4,
         Parent = ButtonContainer
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = MinimizeBtn})
     
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        Window:Minimize()
-    end)
-    
-    MinimizeBtn.MouseEnter:Connect(function()
-        Tween(MinimizeBtn, {BackgroundTransparency = 0.1}, 0.15)
-    end)
-    
-    MinimizeBtn.MouseLeave:Connect(function()
-        Tween(MinimizeBtn, {BackgroundTransparency = 0.3}, 0.15)
-    end)
-    
     local CloseBtn = Create("TextButton", {
-        Name = "CloseBtn",
         Size = UDim2.new(0, 32, 0, 32),
         BackgroundColor3 = Theme.Element,
-        BackgroundTransparency = 0.3,
         Text = "×",
         TextColor3 = Theme.Text,
         TextSize = 22,
         Font = Enum.Font.GothamBold,
         AutoButtonColor = false,
-        ZIndex = 4,
         Parent = ButtonContainer
     })
     
@@ -413,31 +302,64 @@ function RavynethUI:CreateWindow(config)
         Window:Destroy()
     end)
     
-    CloseBtn.MouseEnter:Connect(function()
-        Tween(CloseBtn, {BackgroundColor3 = Color3.fromRGB(200, 50, 50), BackgroundTransparency = 0}, 0.15)
-    end)
-    
-    CloseBtn.MouseLeave:Connect(function()
-        Tween(CloseBtn, {BackgroundColor3 = Theme.Element, BackgroundTransparency = 0.3}, 0.15)
+    -- MINIMIZE/EXPAND LOGIC (FIXED)
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        Window.Minimized = not Window.Minimized
+        
+        if Window.Minimized then
+            -- Minimize to logo only
+            Tween(MainFrame, {Size = UDim2.new(0, 200, 0, 50)}, 0.3)
+            task.wait(0.1)
+            
+            -- Hide everything except header
+            for _, child in pairs(MainFrame:GetChildren()) do
+                if child ~= Header and child ~= Shadow and not child:IsA("UICorner") then
+                    child.Visible = false
+                end
+            end
+            
+            SearchContainer.Visible = false
+            ButtonContainer.Visible = false
+            
+            -- Make logo clickable to expand
+            local ExpandClickFrame = Create("TextButton", {
+                Name = "ExpandClick",
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                ZIndex = 10,
+                Parent = LogoContainer
+            })
+            
+            ExpandClickFrame.MouseButton1Click:Connect(function()
+                Window.Minimized = false
+                ExpandClickFrame:Destroy()
+                
+                -- Show everything
+                SearchContainer.Visible = true
+                ButtonContainer.Visible = true
+                
+                for _, child in pairs(MainFrame:GetChildren()) do
+                    child.Visible = true
+                end
+                
+                Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
+            end)
+        end
     end)
     
     -- Sidebar
     local Sidebar = Create("Frame", {
-        Name = "Sidebar",
         Size = UDim2.new(0, 130, 1, -60),
         Position = UDim2.new(0, 10, 0, 55),
         BackgroundColor3 = Theme.Sidebar,
-        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
-        ZIndex = 2,
         Parent = MainFrame
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = Sidebar})
-    AddGradient(Sidebar, Theme.Sidebar, Theme.Content, 135)
     
     local SidebarList = Create("ScrollingFrame", {
-        Name = "SidebarList",
         Size = UDim2.new(1, -10, 1, -10),
         Position = UDim2.new(0, 5, 0, 5),
         BackgroundTransparency = 1,
@@ -446,7 +368,6 @@ function RavynethUI:CreateWindow(config)
         ScrollBarImageColor3 = Theme.Accent,
         CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        ZIndex = 3,
         Parent = Sidebar
     })
     
@@ -458,7 +379,6 @@ function RavynethUI:CreateWindow(config)
     
     Create("UIPadding", {
         PaddingTop = UDim.new(0, 5),
-        PaddingBottom = UDim.new(0, 5),
         PaddingLeft = UDim.new(0, 5),
         PaddingRight = UDim.new(0, 5),
         Parent = SidebarList
@@ -466,140 +386,25 @@ function RavynethUI:CreateWindow(config)
     
     -- Content
     local ContentContainer = Create("Frame", {
-        Name = "ContentContainer",
         Size = UDim2.new(1, -155, 1, -60),
         Position = UDim2.new(0, 145, 0, 55),
         BackgroundColor3 = Theme.Content,
-        BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
-        ZIndex = 2,
         Parent = MainFrame
     })
     
     Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = ContentContainer})
-    AddGradient(ContentContainer, Theme.Content, Theme.Element, 135)
     
     -- Window Functions
     function Window:Toggle()
         Window.Visible = not Window.Visible
-        if Window.Visible then
-            MainFrame.Visible = true
-            MainFrame.Size = UDim2.new(0, 0, 0, 0)
-            MainFrame.BackgroundTransparency = 1
-            
-            -- Reset transparency for all elements
-            for _, child in pairs(MainFrame:GetDescendants()) do
-                if child:IsA("GuiObject") then
-                    pcall(function()
-                        if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                            child.TextTransparency = 0
-                        end
-                        if child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                            child.ImageTransparency = 0
-                        end
-                        if child:IsA("Frame") then
-                            if child.Name == "MainFrame" then
-                                child.BackgroundTransparency = 0.2
-                            elseif child.Name == "Header" or child.Name == "Sidebar" or child.Name == "ContentContainer" or child.Name == "SearchContainer" then
-                                child.BackgroundTransparency = 0.3
-                            else
-                                child.BackgroundTransparency = 0
-                            end
-                        end
-                    end)
-                end
-            end
-            
-            Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480), BackgroundTransparency = 0.2}, 0.4, Enum.EasingStyle.Back)
-        else
-            Tween(MainFrame, {BackgroundTransparency = 1}, 0.3)
-            for _, child in pairs(MainFrame:GetDescendants()) do
-                if child:IsA("GuiObject") then
-                    pcall(function()
-                        if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                            Tween(child, {TextTransparency = 1}, 0.3)
-                        end
-                        if child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                            Tween(child, {ImageTransparency = 1}, 0.3)
-                        end
-                        if child:IsA("Frame") then
-                            Tween(child, {BackgroundTransparency = 1}, 0.3)
-                        end
-                    end)
-                end
-            end
-            task.wait(0.3)
-            MainFrame.Visible = false
-        end
-    end
-    
-    function Window:Minimize()
-        Window.Minimized = not Window.Minimized
-        if Window.Minimized then
-            -- MINIMIZE TO CLICKABLE LOGO
-            Tween(MainFrame, {Size = UDim2.new(0, 220, 0, 50)}, 0.3)
-            Sidebar.Visible = false
-            ContentContainer.Visible = false
-            SearchContainer.Visible = false
-            ButtonContainer.Visible = false
-            
-            -- Make logo clickable to expand
-            LogoContainer.Active = true
-            local ExpandButton = Create("TextButton", {
-                Name = "ExpandButton",
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = "",
-                ZIndex = 10,
-                Parent = LogoContainer
-            })
-            
-            ExpandButton.MouseButton1Click:Connect(function()
-                Window:Minimize()
-            end)
-            
-            ExpandButton.MouseEnter:Connect(function()
-                Tween(LogoText, {TextSize = 24}, 0.15)
-            end)
-            
-            ExpandButton.MouseLeave:Connect(function()
-                Tween(LogoText, {TextSize = 22}, 0.15)
-            end)
-        else
-            -- EXPAND BACK
-            local expandBtn = LogoContainer:FindFirstChild("ExpandButton")
-            if expandBtn then expandBtn:Destroy() end
-            
-            Tween(MainFrame, {Size = UDim2.new(0, 680, 0, 480)}, 0.3)
-            task.wait(0.2)
-            Sidebar.Visible = true
-            ContentContainer.Visible = true
-            SearchContainer.Visible = true
-            ButtonContainer.Visible = true
-        end
+        MainFrame.Visible = Window.Visible
     end
     
     function Window:Destroy()
-        Tween(MainFrame, {BackgroundTransparency = 1}, 0.4)
-        Tween(Shadow, {ImageTransparency = 1}, 0.4)
-        
-        for _, child in pairs(MainFrame:GetDescendants()) do
-            if child:IsA("GuiObject") then
-                pcall(function()
-                    if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                        Tween(child, {TextTransparency = 1}, 0.4)
-                    end
-                    if child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                        Tween(child, {ImageTransparency = 1}, 0.4)
-                    end
-                    if child:IsA("Frame") then
-                        Tween(child, {BackgroundTransparency = 1}, 0.4)
-                    end
-                end)
-            end
-        end
-        
-        task.wait(0.4)
+        Tween(MainFrame, {BackgroundTransparency = 1}, 0.3)
+        Tween(Shadow, {ImageTransparency = 1}, 0.3)
+        task.wait(0.3)
         ScreenGui:Destroy()
     end
     
@@ -619,19 +424,14 @@ function RavynethUI:CreateWindow(config)
     function Window:CreateTab(tabName)
         local Tab = {
             Name = tabName,
-            Elements = {},
-            Sections = {},
             Container = nil
         }
         
         local TabButton = Create("TextButton", {
-            Name = tabName,
             Size = UDim2.new(1, 0, 0, 36),
             BackgroundColor3 = Theme.Element,
-            BackgroundTransparency = 0.3,
             Text = "",
             AutoButtonColor = false,
-            ZIndex = 4,
             Parent = SidebarList
         })
         
@@ -646,7 +446,6 @@ function RavynethUI:CreateWindow(config)
             TextSize = 13,
             Font = Enum.Font.GothamBold,
             TextXAlignment = Enum.TextXAlignment.Left,
-            ZIndex = 5,
             Parent = TabButton
         })
         
@@ -661,8 +460,6 @@ function RavynethUI:CreateWindow(config)
             CanvasSize = UDim2.new(0, 0, 0, 0),
             AutomaticCanvasSize = Enum.AutomaticSize.Y,
             Visible = false,
-            ClipsDescendants = true,
-            ZIndex = 3,
             Parent = ContentContainer
         })
         
@@ -678,32 +475,13 @@ function RavynethUI:CreateWindow(config)
             for _, tab in pairs(Window.Tabs) do
                 tab.Container.Visible = false
                 tab.Button.BackgroundColor3 = Theme.Element
-                tab.Button.BackgroundTransparency = 0.3
                 tab.Label.TextColor3 = Theme.TextDim
-                local grad = tab.Button:FindFirstChildOfClass("UIGradient")
-                if grad then grad:Destroy() end
             end
             
             TabContent.Visible = true
             TabButton.BackgroundColor3 = Theme.Accent
-            TabButton.BackgroundTransparency = 0.1
             TabLabel.TextColor3 = Theme.Text
-            AddGradient(TabButton, Theme.Accent, Theme.AccentDark, 90)
             Window.CurrentTab = Tab
-            
-            SearchBox.Text = ""
-        end)
-        
-        TabButton.MouseEnter:Connect(function()
-            if Window.CurrentTab ~= Tab then
-                Tween(TabButton, {BackgroundTransparency = 0.1}, 0.15)
-            end
-        end)
-        
-        TabButton.MouseLeave:Connect(function()
-            if Window.CurrentTab ~= Tab then
-                Tween(TabButton, {BackgroundTransparency = 0.3}, 0.15)
-            end
         end)
         
         Tab.Button = TabButton
@@ -713,9 +491,7 @@ function RavynethUI:CreateWindow(config)
         
         if #Window.Tabs == 1 then
             TabButton.BackgroundColor3 = Theme.Accent
-            TabButton.BackgroundTransparency = 0.1
             TabLabel.TextColor3 = Theme.Text
-            AddGradient(TabButton, Theme.Accent, Theme.AccentDark, 90)
             TabContent.Visible = true
             Window.CurrentTab = Tab
         end
@@ -723,10 +499,8 @@ function RavynethUI:CreateWindow(config)
         -- SECTION
         function Tab:CreateSection(sectionName)
             local SectionFrame = Create("Frame", {
-                Name = sectionName,
                 Size = UDim2.new(1, 0, 0, 28),
                 BackgroundTransparency = 1,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
@@ -739,25 +513,17 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 14,
                 Font = Enum.Font.GothamBold,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 5,
                 Parent = SectionFrame
             })
-            
-            AddGradient(SectionLabel, Theme.AccentLight, Theme.Accent, 90)
             
             local Divider = Create("Frame", {
                 Size = UDim2.new(1, -16, 0, 2),
                 Position = UDim2.new(0, 8, 1, -3),
                 BackgroundColor3 = Theme.Accent,
-                BackgroundTransparency = 0.3,
+                BackgroundTransparency = 0.7,
                 BorderSizePixel = 0,
-                ZIndex = 4,
                 Parent = SectionFrame
             })
-            
-            AddGradient(Divider, Theme.Accent, Theme.AccentDark, 0)
-            
-            table.insert(Tab.Sections, sectionName)
         end
         
         -- LABEL
@@ -765,7 +531,6 @@ function RavynethUI:CreateWindow(config)
             local LabelFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 26),
                 BackgroundTransparency = 1,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
@@ -779,18 +544,13 @@ function RavynethUI:CreateWindow(config)
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true,
-                ZIndex = 5,
                 Parent = LabelFrame
             })
             
             local LabelObject = {}
-            
             function LabelObject:Set(newText)
-                if Label and Label.Parent then
-                    Label.Text = newText
-                end
+                if Label and Label.Parent then Label.Text = newText end
             end
-            
             return LabelObject
         end
         
@@ -800,22 +560,17 @@ function RavynethUI:CreateWindow(config)
             local Name = config.Name or "Toggle"
             local Flag = config.Flag or Name
             local CurrentValue = SavedConfig[Flag]
-            if CurrentValue == nil then
-                CurrentValue = config.CurrentValue or false
-            end
+            if CurrentValue == nil then CurrentValue = config.CurrentValue or false end
             local Callback = config.Callback or function() end
             
             local ToggleFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 36),
                 BackgroundColor3 = Theme.Element,
-                BackgroundTransparency = 0.2,
                 BorderSizePixel = 0,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = ToggleFrame})
-            AddGradient(ToggleFrame, Theme.Element, Theme.Content, 90)
             
             local ToggleLabel = Create("TextLabel", {
                 Size = UDim2.new(1, -50, 1, 0),
@@ -826,7 +581,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 5,
                 Parent = ToggleFrame
             })
             
@@ -834,24 +588,18 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(0, 38, 0, 20),
                 Position = UDim2.new(1, -44, 0.5, -10),
                 BackgroundColor3 = CurrentValue and Theme.Accent or Theme.Content,
-                BackgroundTransparency = 0.2,
                 Text = "",
                 AutoButtonColor = false,
-                ZIndex = 5,
                 Parent = ToggleFrame
             })
             
             Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ToggleButton})
-            if CurrentValue then
-                AddGradient(ToggleButton, Theme.Accent, Theme.AccentDark, 90)
-            end
             
             local ToggleCircle = Create("Frame", {
                 Size = UDim2.new(0, 16, 0, 16),
                 Position = CurrentValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
                 BackgroundColor3 = Theme.Text,
                 BorderSizePixel = 0,
-                ZIndex = 6,
                 Parent = ToggleButton
             })
             
@@ -861,31 +609,10 @@ function RavynethUI:CreateWindow(config)
             
             local function Update()
                 if not ToggleButton or not ToggleButton.Parent then return end
-                
-                local oldGradient = ToggleButton:FindFirstChildOfClass("UIGradient")
-                if oldGradient then oldGradient:Destroy() end
-                
-                if CurrentValue then
-                    ToggleButton.BackgroundColor3 = Theme.Accent
-                    AddGradient(ToggleButton, Theme.Accent, Theme.AccentDark, 90)
-                else
-                    ToggleButton.BackgroundColor3 = Theme.Content
-                end
-                
-                Tween(ToggleCircle, {
-                    Position = CurrentValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-                }, 0.2, Enum.EasingStyle.Back)
-                
+                ToggleButton.BackgroundColor3 = CurrentValue and Theme.Accent or Theme.Content
+                Tween(ToggleCircle, {Position = CurrentValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
                 SavedConfig[Flag] = CurrentValue
                 SaveConfig()
-                
-                Window:Notify({
-                    Title = Name,
-                    Content = CurrentValue and "Enabled" or "Disabled",
-                    Duration = 2,
-                    Type = CurrentValue and "success" or "info"
-                })
-                
                 Callback(CurrentValue)
             end
             
@@ -895,14 +622,6 @@ function RavynethUI:CreateWindow(config)
                 Update()
             end)
             
-            ToggleFrame.MouseEnter:Connect(function()
-                Tween(ToggleFrame, {BackgroundTransparency = 0.1}, 0.15)
-            end)
-            
-            ToggleFrame.MouseLeave:Connect(function()
-                Tween(ToggleFrame, {BackgroundTransparency = 0.2}, 0.15)
-            end)
-            
             function ToggleObject:Set(value)
                 CurrentValue = value
                 ToggleObject.Value = value
@@ -910,7 +629,6 @@ function RavynethUI:CreateWindow(config)
             end
             
             pcall(Callback, CurrentValue)
-            
             return ToggleObject
         end
         
@@ -928,15 +646,11 @@ function RavynethUI:CreateWindow(config)
             local SliderFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = Theme.Element,
-                BackgroundTransparency = 0.2,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = SliderFrame})
-            AddGradient(SliderFrame, Theme.Element, Theme.Content, 90)
             
             local SliderLabel = Create("TextLabel", {
                 Size = UDim2.new(1, -16, 0, 18),
@@ -947,7 +661,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 5,
                 Parent = SliderFrame
             })
             
@@ -955,10 +668,7 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(1, -85, 0, 5),
                 Position = UDim2.new(0, 12, 1, -16),
                 BackgroundColor3 = Theme.Content,
-                BackgroundTransparency = 0.3,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 5,
                 Parent = SliderFrame
             })
             
@@ -969,23 +679,17 @@ function RavynethUI:CreateWindow(config)
             local SliderFill = Create("Frame", {
                 Size = UDim2.new(percentage, 0, 1, 0),
                 BackgroundColor3 = Theme.Accent,
-                BackgroundTransparency = 0.1,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 6,
                 Parent = SliderTrack
             })
             
             Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderFill})
-            AddGradient(SliderFill, Theme.AccentLight, Theme.Accent, 0)
             
             local SliderDot = Create("Frame", {
                 Size = UDim2.new(0, 12, 0, 12),
                 Position = UDim2.new(percentage, -6, 0.5, -6),
                 BackgroundColor3 = Theme.Text,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 7,
                 Parent = SliderTrack
             })
             
@@ -1000,7 +704,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.GothamBold,
                 TextXAlignment = Enum.TextXAlignment.Right,
-                ZIndex = 5,
                 Parent = SliderFrame
             })
             
@@ -1008,7 +711,6 @@ function RavynethUI:CreateWindow(config)
             
             local function UpdateSlider(input)
                 if not SliderTrack or not SliderTrack.Parent then return end
-                
                 local mousePos = input.Position.X
                 local trackPos = SliderTrack.AbsolutePosition.X
                 local trackSize = SliderTrack.AbsoluteSize.X
@@ -1031,14 +733,6 @@ function RavynethUI:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     Dragging = true
                     UpdateSlider(input)
-                    Tween(SliderDot, {Size = UDim2.new(0, 16, 0, 16)}, 0.1)
-                end
-            end)
-            
-            SliderTrack.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    Dragging = false
-                    Tween(SliderDot, {Size = UDim2.new(0, 12, 0, 12)}, 0.1)
                 end
             end)
             
@@ -1051,31 +745,18 @@ function RavynethUI:CreateWindow(config)
             UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     Dragging = false
-                    if SliderDot and SliderDot.Parent then
-                        Tween(SliderDot, {Size = UDim2.new(0, 12, 0, 12)}, 0.1)
-                    end
                 end
-            end)
-            
-            SliderFrame.MouseEnter:Connect(function()
-                Tween(SliderFrame, {BackgroundTransparency = 0.1}, 0.15)
-            end)
-            
-            SliderFrame.MouseLeave:Connect(function()
-                Tween(SliderFrame, {BackgroundTransparency = 0.2}, 0.15)
             end)
         end
         
-        -- COMPACT: TOGGLE + SLIDER
+        -- TOGGLE + SLIDER COMBO
         function Tab:CreateToggleSlider(config)
             config = config or {}
             local Name = config.Name or "Toggle Slider"
             local ToggleFlag = config.ToggleFlag or Name .. "_Toggle"
             local SliderFlag = config.SliderFlag or Name .. "_Slider"
             local ToggleValue = SavedConfig[ToggleFlag]
-            if ToggleValue == nil then
-                ToggleValue = config.ToggleValue or false
-            end
+            if ToggleValue == nil then ToggleValue = config.ToggleValue or false end
             local Range = config.Range or {0, 100}
             local Increment = config.Increment or 1
             local SliderValue = SavedConfig[SliderFlag] or config.SliderValue or Range[1]
@@ -1086,15 +767,11 @@ function RavynethUI:CreateWindow(config)
             local Frame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 50),
                 BackgroundColor3 = Theme.Element,
-                BackgroundTransparency = 0.2,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = Frame})
-            AddGradient(Frame, Theme.Element, Theme.Content, 90)
             
             local Label = Create("TextLabel", {
                 Size = UDim2.new(1, -50, 0, 18),
@@ -1105,7 +782,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 5,
                 Parent = Frame
             })
             
@@ -1113,24 +789,18 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(0, 38, 0, 20),
                 Position = UDim2.new(1, -44, 0, 6),
                 BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content,
-                BackgroundTransparency = 0.2,
                 Text = "",
                 AutoButtonColor = false,
-                ZIndex = 5,
                 Parent = Frame
             })
             
             Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ToggleButton})
-            if ToggleValue then
-                AddGradient(ToggleButton, Theme.Accent, Theme.AccentDark, 90)
-            end
             
             local ToggleCircle = Create("Frame", {
                 Size = UDim2.new(0, 16, 0, 16),
                 Position = ToggleValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
                 BackgroundColor3 = Theme.Text,
                 BorderSizePixel = 0,
-                ZIndex = 6,
                 Parent = ToggleButton
             })
             
@@ -1140,10 +810,7 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(1, -85, 0, 5),
                 Position = UDim2.new(0, 12, 1, -16),
                 BackgroundColor3 = Theme.Content,
-                BackgroundTransparency = 0.3,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 5,
                 Parent = Frame
             })
             
@@ -1154,21 +821,17 @@ function RavynethUI:CreateWindow(config)
             local SliderFill = Create("Frame", {
                 Size = UDim2.new(percentage, 0, 1, 0),
                 BackgroundColor3 = Theme.Accent,
-                BackgroundTransparency = 0.1,
                 BorderSizePixel = 0,
-                ZIndex = 6,
                 Parent = SliderTrack
             })
             
             Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SliderFill})
-            AddGradient(SliderFill, Theme.AccentLight, Theme.Accent, 0)
             
             local SliderDot = Create("Frame", {
                 Size = UDim2.new(0, 12, 0, 12),
                 Position = UDim2.new(percentage, -6, 0.5, -6),
                 BackgroundColor3 = Theme.Text,
                 BorderSizePixel = 0,
-                ZIndex = 7,
                 Parent = SliderTrack
             })
             
@@ -1183,39 +846,22 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.GothamBold,
                 TextXAlignment = Enum.TextXAlignment.Right,
-                ZIndex = 5,
                 Parent = Frame
             })
             
-            -- Toggle Logic
             ToggleButton.MouseButton1Click:Connect(function()
                 ToggleValue = not ToggleValue
-                
-                local oldGradient = ToggleButton:FindFirstChildOfClass("UIGradient")
-                if oldGradient then oldGradient:Destroy() end
-                
-                if ToggleValue then
-                    ToggleButton.BackgroundColor3 = Theme.Accent
-                    AddGradient(ToggleButton, Theme.Accent, Theme.AccentDark, 90)
-                else
-                    ToggleButton.BackgroundColor3 = Theme.Content
-                end
-                
-                Tween(ToggleCircle, {
-                    Position = ToggleValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-                }, 0.2, Enum.EasingStyle.Back)
-                
+                ToggleButton.BackgroundColor3 = ToggleValue and Theme.Accent or Theme.Content
+                Tween(ToggleCircle, {Position = ToggleValue and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}, 0.2)
                 SavedConfig[ToggleFlag] = ToggleValue
                 SaveConfig()
                 ToggleCallback(ToggleValue)
             end)
             
-            -- Slider Logic
             local Dragging = false
             
             local function UpdateSlider(input)
                 if not SliderTrack or not SliderTrack.Parent then return end
-                
                 local mousePos = input.Position.X
                 local trackPos = SliderTrack.AbsolutePosition.X
                 local trackSize = SliderTrack.AbsoluteSize.X
@@ -1238,14 +884,6 @@ function RavynethUI:CreateWindow(config)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     Dragging = true
                     UpdateSlider(input)
-                    Tween(SliderDot, {Size = UDim2.new(0, 16, 0, 16)}, 0.1)
-                end
-            end)
-            
-            SliderTrack.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    Dragging = false
-                    Tween(SliderDot, {Size = UDim2.new(0, 12, 0, 12)}, 0.1)
                 end
             end)
             
@@ -1258,18 +896,7 @@ function RavynethUI:CreateWindow(config)
             UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     Dragging = false
-                    if SliderDot and SliderDot.Parent then
-                        Tween(SliderDot, {Size = UDim2.new(0, 12, 0, 12)}, 0.1)
-                    end
                 end
-            end)
-            
-            Frame.MouseEnter:Connect(function()
-                Tween(Frame, {BackgroundTransparency = 0.1}, 0.15)
-            end)
-            
-            Frame.MouseLeave:Connect(function()
-                Tween(Frame, {BackgroundTransparency = 0.2}, 0.15)
             end)
         end
         
@@ -1283,29 +910,22 @@ function RavynethUI:CreateWindow(config)
             local CurrentOption = SavedConfig[Flag] or config.CurrentOption or (MultipleOptions and {} or {})
             local Callback = config.Callback or function() end
             
-            if type(CurrentOption) ~= "table" then
-                CurrentOption = {CurrentOption}
-            end
+            if type(CurrentOption) ~= "table" then CurrentOption = {CurrentOption} end
             
             local DropdownFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 36),
                 BackgroundColor3 = Theme.Element,
-                BackgroundTransparency = 0.2,
                 BorderSizePixel = 0,
-                ClipsDescendants = false,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = DropdownFrame})
-            AddGradient(DropdownFrame, Theme.Element, Theme.Content, 90)
             
             local DropdownButton = Create("TextButton", {
                 Size = UDim2.new(1, 0, 0, 36),
                 BackgroundTransparency = 1,
                 Text = "",
                 AutoButtonColor = false,
-                ZIndex = 5,
                 Parent = DropdownFrame
             })
             
@@ -1318,7 +938,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 6,
                 Parent = DropdownButton
             })
             
@@ -1330,7 +949,6 @@ function RavynethUI:CreateWindow(config)
                 TextColor3 = Theme.Accent,
                 TextSize = 10,
                 Font = Enum.Font.Gotham,
-                ZIndex = 6,
                 Parent = DropdownButton
             })
             
@@ -1338,9 +956,7 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 40),
                 BackgroundColor3 = Theme.Content,
-                BackgroundTransparency = 0.1,
                 BorderSizePixel = 0,
-                ClipsDescendants = true,
                 Visible = false,
                 ScrollBarThickness = 3,
                 ScrollBarImageColor3 = Theme.Accent,
@@ -1351,7 +967,6 @@ function RavynethUI:CreateWindow(config)
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = DropdownList})
-            AddGradient(DropdownList, Theme.Element, Theme.Content, 135)
             
             Create("UIListLayout", {
                 Padding = UDim.new(0, 2),
@@ -1380,23 +995,10 @@ function RavynethUI:CreateWindow(config)
                 Tween(DropdownFrame, {Size = frameSize}, 0.2)
             end)
             
-            DropdownFrame.MouseEnter:Connect(function()
-                if not Expanded then
-                    Tween(DropdownFrame, {BackgroundTransparency = 0.1}, 0.15)
-                end
-            end)
-            
-            DropdownFrame.MouseLeave:Connect(function()
-                if not Expanded then
-                    Tween(DropdownFrame, {BackgroundTransparency = 0.2}, 0.15)
-                end
-            end)
-            
             for _, option in ipairs(Options) do
                 local OptionButton = Create("TextButton", {
                     Size = UDim2.new(1, 0, 0, 26),
                     BackgroundColor3 = Theme.Element,
-                    BackgroundTransparency = 0.2,
                     Text = "",
                     AutoButtonColor = false,
                     ZIndex = 11,
@@ -1424,33 +1026,23 @@ function RavynethUI:CreateWindow(config)
                         if found then
                             table.remove(CurrentOption, found)
                             OptionButton.BackgroundColor3 = Theme.Element
-                            OptionButton.BackgroundTransparency = 0.2
                             OptionLabel.TextColor3 = Theme.TextDim
-                            local grad = OptionButton:FindFirstChildOfClass("UIGradient")
-                            if grad then grad:Destroy() end
                         else
                             table.insert(CurrentOption, option)
                             OptionButton.BackgroundColor3 = Theme.Accent
-                            OptionButton.BackgroundTransparency = 0.1
                             OptionLabel.TextColor3 = Theme.Text
-                            AddGradient(OptionButton, Theme.Accent, Theme.AccentDark, 90)
                         end
                     else
                         CurrentOption = {option}
                         for _, btn in ipairs(DropdownList:GetChildren()) do
                             if btn:IsA("TextButton") then
                                 btn.BackgroundColor3 = Theme.Element
-                                btn.BackgroundTransparency = 0.2
-                                local grad = btn:FindFirstChildOfClass("UIGradient")
-                                if grad then grad:Destroy() end
                                 local lbl = btn:FindFirstChildOfClass("TextLabel")
                                 if lbl then lbl.TextColor3 = Theme.TextDim end
                             end
                         end
                         OptionButton.BackgroundColor3 = Theme.Accent
-                        OptionButton.BackgroundTransparency = 0.1
                         OptionLabel.TextColor3 = Theme.Text
-                        AddGradient(OptionButton, Theme.Accent, Theme.AccentDark, 90)
                     end
                     
                     SavedConfig[Flag] = CurrentOption
@@ -1458,23 +1050,9 @@ function RavynethUI:CreateWindow(config)
                     Callback(MultipleOptions and CurrentOption or CurrentOption[1])
                 end)
                 
-                OptionButton.MouseEnter:Connect(function()
-                    if not table.find(CurrentOption, option) then
-                        Tween(OptionButton, {BackgroundTransparency = 0.1}, 0.15)
-                    end
-                end)
-                
-                OptionButton.MouseLeave:Connect(function()
-                    if not table.find(CurrentOption, option) then
-                        Tween(OptionButton, {BackgroundTransparency = 0.2}, 0.15)
-                    end
-                end)
-                
                 if table.find(CurrentOption, option) then
                     OptionButton.BackgroundColor3 = Theme.Accent
-                    OptionButton.BackgroundTransparency = 0.1
                     OptionLabel.TextColor3 = Theme.Text
-                    AddGradient(OptionButton, Theme.Accent, Theme.AccentDark, 90)
                 end
             end
         end
@@ -1490,14 +1068,11 @@ function RavynethUI:CreateWindow(config)
             local KeybindFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 36),
                 BackgroundColor3 = Theme.Element,
-                BackgroundTransparency = 0.2,
                 BorderSizePixel = 0,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = KeybindFrame})
-            AddGradient(KeybindFrame, Theme.Element, Theme.Content, 90)
             
             local KeybindLabel = Create("TextLabel", {
                 Size = UDim2.new(1, -85, 1, 0),
@@ -1508,7 +1083,6 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 5,
                 Parent = KeybindFrame
             })
             
@@ -1516,13 +1090,11 @@ function RavynethUI:CreateWindow(config)
                 Size = UDim2.new(0, 70, 0, 24),
                 Position = UDim2.new(1, -78, 0.5, -12),
                 BackgroundColor3 = Theme.Content,
-                BackgroundTransparency = 0.2,
                 Text = CurrentKeybind,
                 TextColor3 = Theme.Text,
                 TextSize = 11,
                 Font = Enum.Font.GothamBold,
                 AutoButtonColor = false,
-                ZIndex = 5,
                 Parent = KeybindFrame
             })
             
@@ -1535,8 +1107,7 @@ function RavynethUI:CreateWindow(config)
                 if Binding then return end
                 Binding = true
                 KeybindButton.Text = "..."
-                Tween(KeybindButton, {BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.1}, 0.15)
-                AddGradient(KeybindButton, Theme.Accent, Theme.AccentDark, 90)
+                Tween(KeybindButton, {BackgroundColor3 = Theme.Accent}, 0.15)
                 
                 if Connection then Connection:Disconnect() end
                 
@@ -1550,9 +1121,7 @@ function RavynethUI:CreateWindow(config)
                         SaveConfig()
                         
                         Binding = false
-                        Tween(KeybindButton, {BackgroundColor3 = Theme.Content, BackgroundTransparency = 0.2}, 0.15)
-                        local grad = KeybindButton:FindFirstChildOfClass("UIGradient")
-                        if grad then grad:Destroy() end
+                        Tween(KeybindButton, {BackgroundColor3 = Theme.Content}, 0.15)
                         
                         if Connection then
                             Connection:Disconnect()
@@ -1560,14 +1129,6 @@ function RavynethUI:CreateWindow(config)
                         end
                     end
                 end)
-            end)
-            
-            KeybindFrame.MouseEnter:Connect(function()
-                Tween(KeybindFrame, {BackgroundTransparency = 0.1}, 0.15)
-            end)
-            
-            KeybindFrame.MouseLeave:Connect(function()
-                Tween(KeybindFrame, {BackgroundTransparency = 0.2}, 0.15)
             end)
             
             if CurrentKeybind ~= "None" and CurrentKeybind ~= "" then
@@ -1591,14 +1152,11 @@ function RavynethUI:CreateWindow(config)
             local ButtonFrame = Create("Frame", {
                 Size = UDim2.new(1, 0, 0, 36),
                 BackgroundColor3 = Theme.Accent,
-                BackgroundTransparency = 0.1,
                 BorderSizePixel = 0,
-                ZIndex = 4,
                 Parent = TabContent
             })
             
             Create("UICorner", {CornerRadius = UDim.new(0, 7), Parent = ButtonFrame})
-            AddGradient(ButtonFrame, Theme.Accent, Theme.AccentDark, 90)
             
             local Button = Create("TextButton", {
                 Size = UDim2.new(1, 0, 1, 0),
@@ -1608,30 +1166,18 @@ function RavynethUI:CreateWindow(config)
                 TextSize = 13,
                 Font = Enum.Font.GothamBold,
                 AutoButtonColor = false,
-                ZIndex = 5,
                 Parent = ButtonFrame
             })
             
             Button.MouseButton1Click:Connect(function()
                 Callback()
-                Tween(ButtonFrame, {BackgroundColor3 = Theme.AccentLight}, 0.1)
-                task.wait(0.1)
-                Tween(ButtonFrame, {BackgroundColor3 = Theme.Accent}, 0.1)
-            end)
-            
-            Button.MouseEnter:Connect(function()
-                Tween(ButtonFrame, {BackgroundTransparency = 0}, 0.15)
-            end)
-            
-            Button.MouseLeave:Connect(function()
-                Tween(ButtonFrame, {BackgroundTransparency = 0.1}, 0.15)
             end)
         end
         
         return Tab
     end
     
-    -- NOTIFICATION (BOTTOM RIGHT, SEMI-TRANSPARENT)
+    -- NOTIFICATION
     function Window:Notify(config)
         config = config or {}
         local Title = config.Title or "Notification"
@@ -1668,14 +1214,12 @@ function RavynethUI:CreateWindow(config)
         local Notification = Create("Frame", {
             Size = UDim2.new(1, 0, 0, 0),
             BackgroundColor3 = Theme.Element,
-            BackgroundTransparency = 0.2,
             BorderSizePixel = 0,
             ZIndex = 101,
             Parent = NotifContainer
         })
         
         Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = Notification})
-        AddGradient(Notification, Theme.Element, Theme.Content, 135)
         
         local AccentLine = Create("Frame", {
             Size = UDim2.new(0, 3, 1, 0),
@@ -1725,7 +1269,7 @@ function RavynethUI:CreateWindow(config)
         local finalHeight = 40 + textSize.Y + 10
         NotifContent.Size = UDim2.new(1, -24, 0, textSize.Y)
         
-        Tween(Notification, {Size = UDim2.new(1, 0, 0, finalHeight)}, 0.3, Enum.EasingStyle.Back)
+        Tween(Notification, {Size = UDim2.new(1, 0, 0, finalHeight)}, 0.3)
         
         task.spawn(function()
             task.wait(Duration)
